@@ -4,6 +4,7 @@ export class Controls {
   private keys: Set<string> = new Set();
   private armPressed = false;
   private resetPressed = false;
+  private gpResetPressed = false;
   private _shouldReset = false;
   private _toggleArm = false;
 
@@ -64,12 +65,20 @@ export class Controls {
       pitch    = Math.abs(rightY) > deadzone ? rightY : 0;
       roll     = Math.abs(rightX) > deadzone ? rightX : 0;
 
-      // Button 0 = arm toggle (only rising edge)
+      // Cross (button 0) = arm/disarm
       if (gp.buttons[0]?.pressed && !this.armPressed) {
         this.armPressed = true;
         this._toggleArm = true;
       } else if (!gp.buttons[0]?.pressed) {
         this.armPressed = false;
+      }
+
+      // Options (button 9) = reset
+      if (gp.buttons[9]?.pressed && !this.gpResetPressed) {
+        this.gpResetPressed = true;
+        this._shouldReset = true;
+      } else if (!gp.buttons[9]?.pressed) {
+        this.gpResetPressed = false;
       }
 
       break;

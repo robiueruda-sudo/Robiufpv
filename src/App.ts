@@ -129,25 +129,24 @@ export class App {
   private updateCamera(): void {
     const state = this.drone.getState();
 
-    // FPV camera: attach to drone body, looking forward
-    // Small offset: slightly above center, pointing along drone's forward axis
-
-    // Get drone quaternion
     const quaternion = new THREE.Quaternion();
     quaternion.setFromEuler(state.rotation);
 
-    // Camera is at drone position + slight upward offset (camera mount)
-    const localOffset = new THREE.Vector3(0.05, 0.02, 0); // slight forward + up
+    // Camera mount is at +X on the drone mesh, but Three.js cameras look along -Z.
+    // Rotating -90° around Y maps the camera's -Z look direction onto the drone's +X (forward).
+    const faceForward = new THREE.Quaternion();
+    faceForward.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
+
+    // 15° upward tilt (in camera local space) — like a real FPV camera mount
+    const tiltUp = new THREE.Quaternion();
+    tiltUp.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -THREE.MathUtils.degToRad(15));
+
+    this.camera.quaternion.copy(quaternion).multiply(faceForward).multiply(tiltUp);
+
+    // Position: offset forward and slightly up along drone's local axes
+    const localOffset = new THREE.Vector3(0.05, 0.02, 0);
     localOffset.applyQuaternion(quaternion);
-
     this.camera.position.copy(state.position).add(localOffset);
-    this.camera.quaternion.copy(quaternion);
-
-    // Small look-ahead tilt: camera pitched slightly up relative to drone forward
-    // (some FPV cameras are tilted 15-30 degrees up to see forward in flight)
-    const cameraTilt = new THREE.Quaternion();
-    cameraTilt.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -THREE.MathUtils.degToRad(15));
-    this.camera.quaternion.multiply(cameraTilt);
   }
 
   private onResize(): void {
